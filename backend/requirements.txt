@@ -1,0 +1,7 @@
+﻿fastapi
+uvicorn
+ag2[openai,tinyfish]
+python-dotenv
+pydantic
+sse-starlette
+httpx
