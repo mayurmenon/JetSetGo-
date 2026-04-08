@@ -75,25 +75,8 @@ This backend supports the Travel AI Website, which generates optimized itinerari
 
 ---
 
-## Setup Instructions
 
-1. Install dependencies:
-
-```bash
-pip install fastapi uvicorn requests
-```
-
-2. Run the server:
-
-```bash
-uvicorn main:app --reload
-```
-
-3. Access health check at `http://127.0.0.1:8000`
-4. Test the `/plan-trip` endpoint using Postman or frontend.
-
----
 
 ## Future Enhancements (Not Included Yet)
 
-* User progress tracking (countries visited, places visited)
+* Trophy Wall - User progress tracking (countries visited, places visited) 
