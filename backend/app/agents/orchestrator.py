@@ -63,29 +63,54 @@ class Orchestrator:
         # 1. Seed Crawler: Get destination overview
         seed = SeedCrawler()
         destination_guide_url = f"https://en.wikivoyage.org/wiki/{destination.replace(' ', '_')}"
-        overview = await seed.crawl(destination_guide_url)
+        try:
+            overview = await asyncio.wait_for(seed.crawl(destination_guide_url), timeout=25)
+        except Exception as exc:
+            overview = {
+                "warning": "seed_crawl_unavailable",
+                "message": str(exc),
+                "source_url": destination_guide_url,
+            }
 
         # 2. Fan-out to specialists
         specialists = TravelSpecialistFactory()
-        specialist_results = await specialists.dispatch_specialists(
-            destination=destination,
-            dates={"start": start_date, "end": end_date},
-            budget=budget,
-            origin=origin_city
+        specialist_results = await asyncio.wait_for(
+            specialists.dispatch_specialists(
+                destination=destination,
+                dates={"start": start_date, "end": end_date},
+                budget=budget,
+                origin=origin_city,
+            ),
+            timeout=20,
         )
+        specialist_results["destination_overview"] = overview
 
         # 3. Validate
         validator = Validator()
-        validated_data = await validator.validate(specialist_results)
+        validated_data = await asyncio.wait_for(validator.validate(specialist_results), timeout=10)
 
         # 4. Synthesize itinerary
         synthesizer = SynthesisAgent()
-        itinerary = await synthesizer.synthesize(validated_data)
+        itinerary = await asyncio.wait_for(synthesizer.synthesize(validated_data), timeout=10)
 
         return {"itinerary": itinerary, "raw_data": validated_data}
 
 
-def run_orchestration(url: str, goal: str = "Extract structured web insights") -> dict[str, Any]:
+def run_orchestration(
+    destination: str,
+    start_date: str,
+    end_date: str,
+    budget: str,
+    origin_city: str | None = None,
+) -> dict[str, Any]:
     """Sync helper for environments that call orchestration without async support."""
     orchestrator = Orchestrator()
-    return asyncio.run(orchestrator.run_pipeline(url=url, goal=goal))
+    return asyncio.run(
+        orchestrator.run_pipeline(
+            destination=destination,
+            start_date=start_date,
+            end_date=end_date,
+            budget=budget,
+            origin_city=origin_city,
+        )
+    )

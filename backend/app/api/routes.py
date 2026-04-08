@@ -63,12 +63,15 @@ async def _run_pipeline(job_id: str, req: ScrapeRequest) -> None:
         )
 
         orchestrator = Orchestrator()
-        final_result = await orchestrator.run_pipeline(
-            destination=req.destination,
-            start_date=req.start_date,
-            end_date=req.end_date,
-            budget=req.budget,
-            origin_city=req.origin_city,
+        final_result = await asyncio.wait_for(
+            orchestrator.run_pipeline(
+                destination=req.destination,
+                start_date=req.start_date,
+                end_date=req.end_date,
+                budget=req.budget,
+                origin_city=req.origin_city,
+            ),
+            timeout=90,
         )
         job["result"] = final_result
         job["status"] = "completed"
